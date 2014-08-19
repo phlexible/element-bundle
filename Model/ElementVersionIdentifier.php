@@ -6,7 +6,7 @@
  * @license   proprietary
  */
 
-namespace Phlexible\Bundle\ElementBundle\ElementVersion;
+namespace Phlexible\Bundle\ElementBundle\Model;
 
 use Phlexible\Component\Identifier\Identifier;
 

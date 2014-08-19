@@ -6,13 +6,16 @@
  * @license   proprietary
  */
 
-namespace Phlexible\Bundle\ElementBundle\ElementStructure;
+namespace Phlexible\Bundle\ElementBundle\Doctrine;
 
-use Phlexible\Bundle\ElementBundle\ElementVersion\ElementVersion;
+use Doctrine\DBAL\Connection;
+use Doctrine\ORM\EntityManager;
+use Phlexible\Bundle\ElementBundle\Entity\ElementVersion;
+use Phlexible\Bundle\ElementBundle\Model\ElementStructure;
+use Phlexible\Bundle\ElementBundle\Model\ElementStructureValue;
 use Phlexible\Bundle\ElementtypeBundle\ElementtypeService;
 use Phlexible\Bundle\ElementtypeBundle\ElementtypeStructure\ElementtypeStructureNode;
 use Phlexible\Bundle\ElementtypeBundle\Field\FieldRegistry;
-use Phlexible\Component\Database\ConnectionManager;
 
 /**
  * Element version data
@@ -23,9 +26,9 @@ use Phlexible\Component\Database\ConnectionManager;
 class ElementStructureLoader
 {
     /**
-     * @var \Zend_Db_Adapter_Abstract
+     * @var Connection
      */
-    private $db;
+    private $connection;
 
     /**
      * @var FieldRegistry
@@ -38,16 +41,16 @@ class ElementStructureLoader
     private $elementtypeService;
 
     /**
-     * @param ConnectionManager  $connectionManager
+     * @param EntityManager      $entityManager
      * @param FieldRegistry      $fieldRegistry
      * @param ElementtypeService $elementtypeService
      */
     public function __construct(
-        ConnectionManager $connectionManager,
+        EntityManager $entityManager,
         FieldRegistry $fieldRegistry,
         ElementtypeService $elementtypeService)
     {
-        $this->db = $connectionManager->default;
+        $this->connection = $entityManager->getConnection();
         $this->fieldRegistry = $fieldRegistry;
         $this->elementtypeService = $elementtypeService;
     }
@@ -193,28 +196,28 @@ class ElementStructureLoader
      *
      * @return array
      */
-    protected function queryStructure($eid, $version)
+    private function queryStructure($eid, $version)
     {
-        $select = $this->db
-            ->select()
-            ->from(
-                $this->db->prefix . 'element_structure',
+        $qb = $this->connection->createQueryBuilder();
+        $qb
+            ->select(
                 array(
-                    'data_id AS id',
-                    'repeatable_node',
-                    'repeatable_id',
-                    'repeatable_ds_id',
-                    'sort',
-                    'cnt',
-                    'ds_id',
-                    'name',
+                    'es.data_id AS id',
+                    'es.repeatable_node',
+                    'es.repeatable_id',
+                    'es.repeatable_ds_id',
+                    'es.sort',
+                    'es.cnt',
+                    'es.ds_id',
+                    'es.name',
                 )
             )
-            ->where('eid = ?', $eid)
-            ->where('version = ?', $version)
-            ->order('sort ASC');
+            ->from('element_structure', 'es')
+            ->where($qb->expr()->eq('es.eid', $eid))
+            ->andWhere($qb->expr()->eq('es.version', $version))
+            ->orderBy('sort', 'ASC');
 
-        $result = $this->db->fetchAll($select);
+        $result = $this->connection->fetchAll($qb->getSQL());
 
         $data = array();
         foreach ($result as $row) {
@@ -231,26 +234,26 @@ class ElementStructureLoader
      *
      * @return array
      */
-    protected function queryData($eid, $version, $language)
+    private function queryData($eid, $version, $language)
     {
-        $select = $this->db
-            ->select()
-            ->from(
-                $this->db->prefix . 'element_structure_data',
+        $qb = $this->connection->createQueryBuilder();
+        $qb
+            ->select(
                 array(
-                    'ds_id',
-                    'repeatable_id',
-                    'repeatable_ds_id',
-                    'name',
-                    'type',
-                    'content',
+                    'esd.ds_id',
+                    'esd.repeatable_id',
+                    'esd.repeatable_ds_id',
+                    'esd.name',
+                    'esd.type',
+                    'esd.content',
                 )
             )
-            ->where('eid = ?', $eid)
-            ->where('version = ?', $version)
-            ->where('language = ?', $language);
+            ->from('element_structure_data', 'esd')
+            ->where($qb->expr()->eq('esd.eid', $eid))
+            ->andWhere($qb->expr()->eq('esd.version', $version))
+            ->andWhere($qb->expr()->eq('esd.language', $qb->expr()->literal($language)));
 
-        $result = $this->db->fetchAll($select);
+        $result = $this->connection->fetchAll($qb->getSQL());
 
         $data = array();
         foreach ($result as $row) {

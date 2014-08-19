@@ -6,7 +6,7 @@
  * @license   proprietary
  */
 
-namespace Phlexible\Bundle\ElementBundle\Element;
+namespace Phlexible\Bundle\ElementBundle\Model;
 
 use Phlexible\Component\Identifier\Identifier;
 use Phlexible\Bundle\LockBundle\Lock\LockIdentityInterface;

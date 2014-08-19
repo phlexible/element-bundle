@@ -6,7 +6,7 @@
  * @license   proprietary
  */
 
-namespace Phlexible\Bundle\ElementBundle\ElementStructure;
+namespace Phlexible\Bundle\ElementBundle\Model;
 
 /**
  * Element structure iterator
