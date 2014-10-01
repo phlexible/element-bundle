@@ -9,11 +9,11 @@
 namespace Phlexible\Bundle\ElementBundle\Exception;
 
 /**
- * Lock failed exception
+ * Create cancelled exception
  *
  * @author Stephan Wentz <sw@brainbits.net>
  */
-class LockFailedException extends RuntimeException
+class CreateCancelledException extends RuntimeException
 {
 
 }
