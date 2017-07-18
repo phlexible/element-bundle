@@ -17,7 +17,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
-class GenerateMappedFieldsCommand extends ContainerAwareCommand
+class GenerateLinksCommand extends ContainerAwareCommand
 {
     /**
      * {@inheritdoc}
@@ -25,8 +25,8 @@ class GenerateMappedFieldsCommand extends ContainerAwareCommand
     protected function configure()
     {
         $this
-            ->setName('element:generate:mapped-fields')
-            ->setDescription('Generate mapped fields for elements.')
+            ->setName('element:generate:links')
+            ->setDescription('Generate links for elements.')
             ->addArgument('eid', InputArgument::OPTIONAL, 'EID');
     }
 
@@ -35,10 +35,9 @@ class GenerateMappedFieldsCommand extends ContainerAwareCommand
         $style = new SymfonyStyle($input, $output);
 
         $elementManager = $this->getContainer()->get('phlexible_element.element_manager');
-        $elementVersionManager = $this->getContainer()->get('phlexible_element.element_version_manager');
         $elementStructureManager = $this->getContainer()->get('phlexible_element.element_structure_manager');
         $elementService = $this->getContainer()->get('phlexible_element.element_service');
-        $fieldMapper = $this->getContainer()->get('phlexible_element.field_mapper');
+        $linkUpdater = $this->getContainer()->get('phlexible_element.link_updater');
 
         $entityManager = $this->getContainer()->get('doctrine.orm.default_entity_manager');
         $entityManager->getConfiguration()->setSQLLogger(null);
@@ -68,13 +67,12 @@ class GenerateMappedFieldsCommand extends ContainerAwareCommand
 
                 try {
                     $elementStructure = $elementStructureManager->find($elementVersion);
+                    $elementStructure->setElementVersion($elementVersion);
 
-                    $fieldMapper->apply($elementVersion, $elementStructure, $elementStructure->getLanguages());
+                    $linkUpdater->updateLinks($elementStructure, false, true);
                 } catch (\Exception $e) {
                     $style->error($e->getMessage());
                 }
-
-                $elementVersionManager->updateElementVersion($elementVersion, false);
             }
 
             if ($index % 10 === 0) {
